@@ -1,14 +1,6 @@
 
 using Google.Cloud.Firestore;
 
-public record User 
- {
-   public string? Email {get; set;} 
-   public string ? Name { get; set; }
-   public List<Message>? Messages { get; set;}
-   public List<string>? Favorites { get; set;}
-   public string? imgUrl { get; set;}
- }
  public class Users{
     private static FirestoreDb _firestoreDb = FirestoreDb.Create("rent-ffb49");
    
@@ -25,43 +17,19 @@ public record User
         foreach (DocumentSnapshot documentSnapshot in allUsersQuerySnapshot.Documents)
         {
             // Initialize a new User object
-            User user = new User();
             Dictionary<string, object> userData = documentSnapshot.ToDictionary();
 
-            // Extract and assign data from the document
-            if (userData.TryGetValue("email", out object? email))
+            User user = new User
             {
-                user.Email = email?.ToString();
-            }
-
-            if (userData.TryGetValue("name", out object? name))
-            {
-                user.Name = name?.ToString();
-            }
-
-            if (userData.TryGetValue("messages", out object? messages))
-            {
-                // Convert the list of messages properly
-                user.Messages = messages is List<object> messageList
-                    ? messageList.Cast<Dictionary<string, object>>()
-                                .Select(m => new Message
-                                {
-                                    MessageString = m.GetValueOrDefault("message")?.ToString(),
-                                    Name = m.GetValueOrDefault("name")?.ToString(),
-                                    ImgUrl = m.GetValueOrDefault("imgUrl")?.ToString()
-                                }).ToList()
-                    : new List<Message>();
-            }
-
-            if (userData.TryGetValue("favourites", out object? favorites))
-            {
-                user.Favorites = favorites as List<string> ?? [];
-            }
-
-            if (userData.TryGetValue("imgUrl", out object? imgUrl))
-            {
-                user.imgUrl = imgUrl?.ToString();
-            }
+                Email = userData.ContainsKey("email") ? userData["email"]?.ToString() : null,
+                Name = userData.ContainsKey("name") ? userData["name"]?.ToString() : null,
+                Messages = userData.ContainsKey("messages") 
+                ? MapToMessages(((List<object>)userData["messages"]).Cast<Dictionary<string, object>>().ToList()) 
+                : new List<Message>(),
+                Favorites = userData.ContainsKey("favourites") ? ((List<dynamic>)userData["favourites"]).Cast<string>().ToList() : null,
+                imgUrl = userData.ContainsKey("imgUrl") ? userData["imgUrl"]?.ToString() : null,
+                Password = userData.ContainsKey("password") ? userData["password"]?.ToString() : null
+            };
 
             users.Add(user);
         }
@@ -89,7 +57,8 @@ public record User
                 { "imgUrl", msg.ImgUrl }
             }).ToList() },
             { "favourites", user.Favorites },
-            { "imgUrl", user.imgUrl }
+            { "imgUrl", user.imgUrl },
+            {"password",user.Password}
         };
 
         // Add the user to the collection
@@ -102,6 +71,19 @@ public record User
         }
     
     }
+    public static Message MapToMessage(Dictionary<string, dynamic> dictionary)
+    {
+        return new Message
+        {
+            MessageString = dictionary.ContainsKey("message") ? dictionary["message"]?.ToString() : null,
+            Name = dictionary.ContainsKey("name") ? dictionary["name"]?.ToString() : null,
+            ImgUrl = dictionary.ContainsKey("imgUrl") ? dictionary["imgUrl"]?.ToString() : null
+        };
+    }
+    public static List<Message> MapToMessages(List<Dictionary<string, dynamic>> dictionaries)
+{
+    return dictionaries.Select(d => MapToMessage(d)).ToList();
+}
 
  }
 

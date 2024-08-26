@@ -51,7 +51,6 @@ public class Posts{
         foreach (DocumentSnapshot documentSnapshot in allUsersQuerySnapshot.Documents)
         {
             var data = documentSnapshot.ToDictionary();
-            Console.WriteLine(data);
                 var post = new Post
                 {
                     Address = data.GetValueOrDefault("address")?.ToString(),
@@ -99,34 +98,63 @@ public class Posts{
         
         return FromJson(data);
     }
-public static async Task<Dictionary<string, dynamic>> UpdatePostRatingAsync(RatePut ratePut)
-{
-    try
+    public static async Task<Dictionary<string, dynamic>> UpdatePostRatingAsync(RatePut ratePut)
     {
-        DocumentReference document = _firestoreDb.Collection("posts").Document(ratePut.PostId);
-        DocumentSnapshot documentSnapshot = await document.GetSnapshotAsync();
-        Dictionary<string, dynamic?> data = documentSnapshot.ToDictionary();
-        List<Rate>? targetRatingList = data["ratedUser"] as List<Rate>;
-        int incRate = 0;
-         Rate? rate = targetRatingList?.FirstOrDefault(x => x.User == ratePut.User);
-        if (rate != null)
+        try
         {
-            incRate = ratePut.Rating - rate.Rating;
-            rate.Rating = ratePut.Rating;
+            DocumentReference document = _firestoreDb.Collection("posts").Document(ratePut.PostId);
+            DocumentSnapshot documentSnapshot = await document.GetSnapshotAsync();
+            Dictionary<string, dynamic?> data = documentSnapshot.ToDictionary();
+            List<Rate> targetRatingList = data.GetValueOrDefault("ratedUser") is List<object> rateList
+            ? rateList.Cast<Dictionary<string, object>>().Select(rate => new Rate
+            {
+                User = rate.GetValueOrDefault("user")?.ToString(),
+                Rating = Convert.ToInt32(rate.GetValueOrDefault("rating"))
+            }).ToList()
+            : new List<Rate>();
+            int incRate = 0;
+            Rate? rate = targetRatingList?.FirstOrDefault(x => x.User == ratePut.User);
+            if (rate != null)
+            {
+                incRate = ratePut.Rating - rate.Rating;
+                rate.Rating = ratePut.Rating;
+            }
+            else{
+            targetRatingList?.Add(new Rate { User = ratePut.User, Rating = ratePut.Rating });         
+            }
+            List<Dictionary<string, object?>> updatedRatingList = targetRatingList is not null ? targetRatingList.Select(r => new Dictionary<string, object?>
+            {
+                { "user", r.User },
+                { "rating", r.Rating }
+            }).ToList() : new List<Dictionary<string, object?>>();
+
+            Dictionary<string, object?> updates = new Dictionary<string, object?>
+            {
+                { "ratedUser", updatedRatingList },
+                { "totalRating", updatedRatingList.Count > 1 ? FieldValue.Increment(incRate) : ratePut.Rating }
+            };  
+            
+            await document.UpdateAsync(updates);
+            return new Dictionary<string, dynamic> { { "message", "Rating updated successfully" } };
         }
-        else{
-            targetRatingList?.Add(new Rate { User = ratePut.User,Rating =ratePut.Rating});
+        catch (System.Exception ex)
+        {
+            return new Dictionary<string, dynamic> { { "error", ex.Message } };
         }
-        Dictionary<string, object?> updates = new Dictionary<string, object?>{{ "ratedUser", targetRatingList },{ "totalRating", targetRatingList.Count > 1 ? FieldValue.Increment(incRate):ratePut.Rating }};
-        
-        await document.UpdateAsync(updates);
-        return new Dictionary<string, dynamic> { { "message", "Rating updated successfully" } };
     }
-    catch (System.Exception ex)
-    {
-        return new Dictionary<string, dynamic> { { "error", ex.Message } };
+    public static async Task<Dictionary<string,dynamic>> DeletePostAsync(string id){
+        try
+        {
+            DocumentReference documentReference = _firestoreDb.Collection("posts").Document(id);
+            await documentReference.DeleteAsync();
+            return new Dictionary<string, dynamic>(){{"message", "Successfully Deleted"}};
+        }
+        catch (Exception ex)
+        {
+            return new Dictionary<string, dynamic>(){{"message", ex.Message}};
+        }
+       
     }
-}
     public static Dictionary<string, dynamic?> ToJson(Post post){
         Dictionary<string,dynamic?> postData = new Dictionary<string,dynamic?>()
         {
