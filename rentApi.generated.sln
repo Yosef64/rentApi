@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rentApi", "rentApi.csproj", "{997DF11E-016A-493D-BCB0-D241799060C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rentApi", "rentApi.csproj", "{502710F6-847E-42D5-95B9-D32900828F64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{997DF11E-016A-493D-BCB0-D241799060C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{997DF11E-016A-493D-BCB0-D241799060C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{997DF11E-016A-493D-BCB0-D241799060C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{997DF11E-016A-493D-BCB0-D241799060C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{502710F6-847E-42D5-95B9-D32900828F64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{502710F6-847E-42D5-95B9-D32900828F64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{502710F6-847E-42D5-95B9-D32900828F64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{502710F6-847E-42D5-95B9-D32900828F64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
